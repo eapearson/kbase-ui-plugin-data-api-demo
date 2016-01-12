@@ -1,0 +1,97 @@
+## Data API Demo Plugin
+---
+package:
+    name: dataapidemo
+    description: Widgets for the Data API
+    author: Erik Pearson
+    date: January 12, 2016
+source:
+    modules: []
+install:
+    widgets:
+        -
+            module: plugins/dataapidemo/modules/welcomePanel
+            id: kb_dataapidemo_welcomePanel
+            type: factory
+        -
+            module: plugins/dataapidemo/modules/panel
+            id: kb_dataapidemo_panel
+            type: factory       
+        -
+            module: plugins/dataapidemo/modules/lineageWidget
+            id: kb_dataapidemo_lineage
+            type: factory
+        -
+            module: plugins/dataapidemo/modules/scientificName
+            id: kb_dataapidemo_scientificName
+            type: factory
+    routes:
+        -
+            path:
+                -
+                    dataapidemo
+            widget: kb_dataapidemo_welcomePanel            
+        -
+            path:
+                -
+                    dataapidemo   
+                -
+                    type: param
+                    name: workspaceId
+                -
+                    type: param
+                    name: objectId
+                -
+                    type: param
+                    name: objectVersion                    
+            widget: kb_dataapidemo_panel
+        -
+            path:
+                -
+                    dataapidemo   
+                -
+                    type: param
+                    name: workspaceId
+                -
+                    type: param
+                    name: objectId
+                   
+            widget: kb_dataapidemo_panel            
+#        -
+#            path:
+#                -
+#                    dataapidemo
+#                -
+#                    lineage
+#                -
+#                    type: param
+#                    name: workspaceId
+#                -
+#                    type: param
+#                    name: objectId
+#                -
+#                    type: param
+#                    name: objectVersion
+#        -
+#            path:
+#                -
+#                    dataapidemo
+#                -
+#                    scientificName
+#                -
+#                    type: param
+#                    name: workspaceId
+#                -
+#                    type: param
+#                    name: objectId
+#                -
+#                    type: param
+#                    name: objectVersion
+    menu:
+        -
+            name: dataapidemo
+            definition:
+                path: dataapidemo
+                label: Data API Demo
+                icon: database
+                
