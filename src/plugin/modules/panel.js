@@ -12,11 +12,14 @@ define([
         
         function render() {
             var div = html.tag('div'),
-                h1 = html.tag('h1');
+                h1 = html.tag('h1'),
+                p = html.tag('p');
             return div({class: 'container'},[
                 h1('Hi, I am the data api demo page'),
-                div({id: widgetSet.addWidget('kb_dataapidemo_scientificName'), class: 'col-md-6'}),
-                div({id: widgetSet.addWidget('kb_dataapidemo_lineage'), class: 'col-md-6'})
+                p('These are test widgets, meant to demonstrate the raw data capabilities of the data api client.'),
+                //div({id: widgetSet.addWidget('kb_dataapidemo_scientificName'), class: 'col-md-6'}),
+                //div({id: widgetSet.addWidget('kb_dataapidemo_lineage'), class: 'col-md-6'}),
+                div({id: widgetSet.addWidget('kb_dataapidemo_summary'), class: 'col-md-8'})
             ]);
         }
         

@@ -25,6 +25,10 @@ install:
             module: plugins/dataapidemo/modules/scientificName
             id: kb_dataapidemo_scientificName
             type: factory
+        -
+            module: plugins/dataapidemo/modules/widgets/taxonSummaryWidget
+            id: kb_dataapidemo_summary
+            type: factory
     routes:
         -
             path:
