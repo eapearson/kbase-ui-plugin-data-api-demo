@@ -13,20 +13,11 @@ define([
         function render() {
             var div = html.tag('div'),
                 h1 = html.tag('h1'),
-                ul = html.tag('ul'), li = html.tag('li'),
-                a = html.tag('a');
+                p = html.tag('p');
             return div({class: 'container'},[
-                h1('Hi, I am the data api demo page'),
-                h2('Taxon'),
-                ul([
-                    li(a({href: '#dataapidemo/taxon/1255/3/1'}, 'Demo 1')),
-                    li(a({href: '#dataapidemo/taxon/834/1/1'}, 'Demo 2'))
-                ]),
-                h2('Assembly'),
-                ul([
-                    li(a({href: '#dataapidemo/assembly/1255/3/1'}, 'Demo 1')),
-                    li(a({href: '#dataapidemo/assembly/834/1/1'}, 'Demo 2'))
-                ])
+                h1('Hi, I am the data api Assembly API demo page'),
+                p('These are test widgets, meant to demonstrate the raw data capabilities of the data api client.'),
+                div({id: widgetSet.addWidget('kb_dataapidemo_assemblySummary'), class: 'col-md-8'})
             ]);
         }
         

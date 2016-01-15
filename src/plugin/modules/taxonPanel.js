@@ -19,7 +19,7 @@ define([
                 p('These are test widgets, meant to demonstrate the raw data capabilities of the data api client.'),
                 //div({id: widgetSet.addWidget('kb_dataapidemo_scientificName'), class: 'col-md-6'}),
                 //div({id: widgetSet.addWidget('kb_dataapidemo_lineage'), class: 'col-md-6'}),
-                div({id: widgetSet.addWidget('kb_dataapidemo_summary'), class: 'col-md-8'})
+                div({id: widgetSet.addWidget('kb_dataapidemo_taxonSummary'), class: 'col-md-8'})
             ]);
         }
         

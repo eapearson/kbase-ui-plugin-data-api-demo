@@ -14,8 +14,12 @@ install:
             id: kb_dataapidemo_welcomePanel
             type: factory
         -
-            module: plugins/dataapidemo/modules/panel
-            id: kb_dataapidemo_panel
+            module: plugins/dataapidemo/modules/taxonPanel
+            id: kb_dataapidemo_taxonPanel
+            type: factory       
+        -
+            module: plugins/dataapidemo/modules/assemblyPanel
+            id: kb_dataapidemo_assemblyPanel
             type: factory       
         -
             module: plugins/dataapidemo/modules/lineageWidget
@@ -29,6 +33,10 @@ install:
             module: plugins/dataapidemo/modules/widgets/taxonSummaryWidget
             id: kb_dataapidemo_summary
             type: factory
+        -
+            module: plugins/dataapidemo/modules/widgets/assemblySummaryWidget
+            id: kb_dataapidemo_assembly
+            type: factory                   
     routes:
         -
             path:
@@ -38,7 +46,9 @@ install:
         -
             path:
                 -
-                    dataapidemo   
+                    dataapidemo
+                -
+                    taxon
                 -
                     type: param
                     name: workspaceId
@@ -48,7 +58,23 @@ install:
                 -
                     type: param
                     name: objectVersion                    
-            widget: kb_dataapidemo_panel
+            widget: kb_dataapidemo_taxonPanel
+        -
+            path:
+                -
+                    dataapidemo
+                -
+                    assembly
+                -
+                    type: param
+                    name: workspaceId
+                -
+                    type: param
+                    name: objectId
+                -
+                    type: param
+                    name: objectVersion                    
+            widget: kb_dataapidemo_assemblyPanel            
         -
             path:
                 -
@@ -98,4 +124,3 @@ install:
                 path: dataapidemo
                 label: Data API Demo
                 icon: database
-                
