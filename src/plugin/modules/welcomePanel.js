@@ -12,7 +12,7 @@ define([
         
         function render() {
             var div = html.tag('div'),
-                h1 = html.tag('h1'),
+                h1 = html.tag('h1'), h2 = html.tag('h2'),
                 ul = html.tag('ul'), li = html.tag('li'),
                 a = html.tag('a');
             return div({class: 'container'},[
