@@ -31,11 +31,11 @@ install:
             type: factory
         -
             module: plugins/dataapidemo/modules/widgets/taxonSummaryWidget
-            id: kb_dataapidemo_summary
+            id: kb_dataapidemo_taxonSummary
             type: factory
         -
             module: plugins/dataapidemo/modules/widgets/assemblySummaryWidget
-            id: kb_dataapidemo_assembly
+            id: kb_dataapidemo_assemblySummary
             type: factory                   
     routes:
         -
