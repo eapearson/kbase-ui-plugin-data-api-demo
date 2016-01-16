@@ -30,11 +30,11 @@ install:
             id: kb_dataapidemo_scientificName
             type: factory
         -
-            module: plugins/dataapidemo/modules/widgets/taxonSummaryWidget
+            module: plugins/dataapidemo/modules/widgets/taxonSummary
             id: kb_dataapidemo_taxonSummary
             type: factory
         -
-            module: plugins/dataapidemo/modules/widgets/assemblySummaryWidget
+            module: plugins/dataapidemo/modules/widgets/assemblySummary
             id: kb_dataapidemo_assemblySummary
             type: factory                   
     routes:
