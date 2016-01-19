@@ -1,12 +1,12 @@
 /*global define */
 /*jslint white: true, browser: true */
 define([
+    'bluebird',
     'kb/common/html',
     'kb/data/assembly',
-    '../utils',
-    './utils'
+    '../utils'
 ],
-    function (html, Taxon, utils, utils2) {
+    function (Promise, html, Taxon, utils) {
         'use strict';
         function factory(config) {
             var parent, container, runtime = config.runtime, layout,
@@ -26,34 +26,96 @@ define([
 
             function genRow(method) {
                 var tr = html.tag('tr'),
-                    td = html.tag('td'), 
-                    th = html.tag('th'),
-                    methodName;
-                if (typeof method === 'string') {
-                    methodName = method;
-                } else {
-                    methodName = method[0];
-                }
-                return tr([th(method), td({id: addMount(method)})]);
+                    td = html.tag('td'),
+                    th = html.tag('th');
+
+                return tr([th(method.name), td({id: addMount(method.name)}), td(method.type)]);
             }
 
             var methods = [
-                'getAssemblyId', 'getGenomeAnnotation', 'getExternalSourceInfo', 'getStats',
-                'getNumberContigs', 'getGCContent', 'getDNASize', 'getContigIds',
-                ['getContigLengths', ['NODE_48_length_21448_cov_4.91263_ID_95']],
-                ['getContigGCContent', ['NODE_48_length_21448_cov_4.91263_ID_95']],
-                ['getContigs', ['NODE_48_length_21448_cov_4.91263_ID_95']]
+                {
+                    name: 'getAssemblyId',
+                    type: 'string'
+                },
+                {
+                    name: 'getGenomeAnnotation',
+                    type: 'array (list of ref)'
+                },
+                {
+                    name: 'getExternalSourceInfo',
+                    type: 'object (AssemblyExternalSourceInfo) '
+                },
+                {
+                    name: 'getStats',
+                    type: 'object'
+                },
+                {
+                    name: 'getNumberContigs',
+                    type: 'number'
+                },
+                {
+                    name: 'getGCContent',
+                    type: 'number'
+                },
+                {
+                    name: 'getDNASize',
+                    type: 'number'
+                },
+                {
+                    name: 'getContigIds',
+                    type: 'array (list of refs)'
+                },
+                {
+                    name: 'getContigLengths',
+                    type: 'object (map of string -> number)',
+                    arguments: [
+                        ['51847']
+                    ]
+                },
+                {
+                    name: 'getContigGCContent',
+                    type: 'object (map of string -> number)',
+                    arguments: [
+                        ['51847']
+                    ]
+                },
+                {
+                    name: 'getContigs',
+                    type: 'object (map of string -> AssemblyContig)',
+                    arguments: [
+                        ['51847']
+                    ]
+                }
+            ];
+
+            var types = [
+                {
+                    name: 'AssemblyExternalSourceInfo',
+                    fields: [
+                        {
+                            name: 'external_source',
+                            type: 'string'
+                        },
+                        {
+                            name: 'external_source_id',
+                            type: 'string'
+                        },
+                        {
+                            name: 'external_source_origination_date',
+                            type: 'string'
+                        }
+                    ]
+                }
             ];
 
             function render() {
                 var div = html.tag('div'),
                     table = html.tag('table'),
-                    tr = html.tag('tr'),
-                    td = html.tag('td'), th = html.tag('th');
+                    tr = html.tag('tr'), th = html.tag('th');
                 return div([
                     div({class: 'well', id: addMount('status')}),
                     table({class: 'table table-striped', style: {width: '100%'}}, [
-                        tr([th('Method'), th('Widget')]),
+                        tr([th('Method'), th('Widget'), th('Type')])
                     ].concat(methods.map(function (method) {
                         return genRow(method);
                     })))
@@ -75,19 +137,27 @@ define([
                         token: runtime.service('session').getAuthToken(),
                         timeout: 10000
                     });
-                setHtml('status', 'Starting client run...');
                 // you need to start the promises sequence with a promise-returning
                 // function
-                client.getParent()
-                    // the first few of these handle the call and return value 
-                    // within the main sequence...
+                // Make this symmetric by starting off with a dummy promise...
+                return Promise.try(function () {
+                    setHtml('status', 'Starting client run...');
+                })
                     .then(function () {
-                        setHtml('getAssemblyId', html.loading());
-                        return client.getAssemblyId()
-                            .then(function (value) {
-                                setHtml('getAssemblyId', value || 'n/a');
+                        return Promise.all(methods.map(function (method) {
+                            return Promise.try(function () {
+                                try {
+                                    return client[method.name].apply(client, method.arguments)
+                                        .then(function (value) {
+                                            console.log(utils);
+                                            setHtml(method.name, utils.formatValue(value));
+                                        });
+                                } catch (ex) {
+                                    setHtml(method.name, 'ERROR');
+                                    console.log(ex);
+                                }
                             });
-
+                        }));
                     })
                     .then(function () {
                         setHtml('status', 'Successfully finished');
@@ -96,7 +166,6 @@ define([
                         setHtml('status', 'ERROR! Check the console');
                         console.log(err);
                     });
-
             }
 
             function detach(params) {

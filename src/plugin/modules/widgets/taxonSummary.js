@@ -68,7 +68,7 @@ define([
                     // the first few of these handle the call and return value 
                     // within the main sequence...
                     .then(function (parentRef) {
-                        setHtml('getParent', parentRef || '* n/a *');                    
+                        setHtml('getParent', utils.formatValue(parentRef));                    
                     })
                     
                     .then(function () {
@@ -76,11 +76,7 @@ define([
                         return client.getChildren();
                     })
                     .then(function (children) {
-                        if (!children || children.length === 0) {
-                            setHtml('getChildren', '* none *');
-                        } else {
-                            setHtml('getChildren', children.join(', '));
-                        }
+                        setHtml('getChildren', utils.formatValue(children));
                     })
                     
                     .then(function () {
@@ -88,7 +84,7 @@ define([
                         return client.getScientificName()                        
                     })
                     .then(function (value) {
-                        setHtml('getScientificName', value);
+                        setHtml('getScientificName', utils.formatValue(value));
                     })
                     
                     .then(function () {
@@ -96,7 +92,7 @@ define([
                         return client.getTaxonomicId()       
                     })
                     .then(function (value) {
-                        setHtml('getTaxonomicId', value);
+                        setHtml('getTaxonomicId', utils.formatValue(value));
                     })
                     
                     // but we can "modularize" by creating self-contained
@@ -105,7 +101,7 @@ define([
                         setHtml('getKingdom', html.loading());
                         return client.getKingdom()
                             .then(function (value) {
-                                setHtml('getKingdom', value || 'n/a');
+                                setHtml('getKingdom', utils.formatValue(value));
                             });
                         
                     })
@@ -113,21 +109,21 @@ define([
                         setHtml('getDomain', html.loading());
                         return client.getDomain()
                             .then(function (value) {
-                                setHtml('getDomain', value || 'n/a');                            
+                                setHtml('getDomain', utils.formatValue(value));                            
                             });
                     })
                     .then(function () {
                         setHtml('getGeneticCode', html.loading());
                         return client.getGeneticCode() 
                             .then(function (value) {
-                                setHtml('getGeneticCode', (value && String(value)) || 'n/a');
+                                setHtml('getGeneticCode', utils.formatValue(value));
                             });
                     })
                     .then(function () {
                         setHtml('getAliases', html.loading());
                         return client.getAliases()
                             .then(function (value) {
-                                setHtml('getAliases', (value && value.join(', ')) || 'n/a');
+                                setHtml('getAliases', utils.formatValue(value));
                             });
                     })
                     .then(function () {

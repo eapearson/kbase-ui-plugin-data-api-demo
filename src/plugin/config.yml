@@ -7,6 +7,9 @@ package:
     date: January 12, 2016
 source:
     modules: []
+    styles: 
+        -
+            file: styles.css
 install:
     widgets:
         -
