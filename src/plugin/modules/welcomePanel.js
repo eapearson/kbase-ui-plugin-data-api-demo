@@ -9,20 +9,21 @@ define([
     'kb/service/utils',
     'kb/data/taxon',
     'kb/data/assembly',
+    'kb/data/genomeAnnotation',
     'thrift'
-], function (Promise, html, dom, WidgetSet, Workspace, serviceUtils, Taxon, Assembly, Thrift) {
+], function (Promise, html, dom, WidgetSet, Workspace, serviceUtils, Taxon, Assembly, GenomeAnnotation, Thrift) {
     'use strict';
     function factory(config) {
         var parent, container, runtime = config.runtime,
             widgetSet = WidgetSet.make({runtime: runtime}),
             layout, places = {},
-            
             div = html.tag('div'),
             h1 = html.tag('h1'), h2 = html.tag('h2'), h3 = html.tag('h3'),
             ul = html.tag('ul'), li = html.tag('li'),
             a = html.tag('a'), i = html.tag('i'),
             table = html.tag('table'), tr = html.tag('tr'),
-            th = html.tag('th'), td = html.tag('td'), span = html.tag('span'), button = html.tag('button');
+            th = html.tag('th'), td = html.tag('td'), span = html.tag('span'), button = html.tag('button'),
+            colgroup = html.tag('colgroup'), col = html.tag('col');
 
         function addPlace(name) {
             var id = html.genId();
@@ -136,12 +137,13 @@ define([
                     return '* null * ';
                 }
                 if (value.pop) {
-                    if (value.length === 0) {
+                    var arrayLen = value.length;
+                    if (arrayLen === 0) {
                         return '* empty array *';
                     }
                     if (value.length > limit) {
                         value = value.slice(0, limit);
-                        value.push('... <i>truncated at ' + limit + ' items</i>');
+                        value.push('... <i>truncated at ' + limit + ' items(' + (arrayLen - value.length - 1) + ' more)</i>');
                     }
                     return '<ol>' + value.map(function (x) {
                         return '<li>' + formatter(x) + '</li>';
@@ -159,7 +161,7 @@ define([
                     if (keyLen > limit) {
                         keys = keys.slice(0, limit);
                         keys.push('...');
-                        value['...'] = '<i>truncated at ' + limit + ' items (' + (keyLen - keys.length - 1) +' more)</i>';
+                        value['...'] = '<i>truncated at ' + limit + ' items (' + (keyLen - keys.length - 1) + ' more)</i>';
                     }
                     return '<ol>' + keys.map(function (key) {
                         return '<li><i>' + key + '</i> -> ' + formatter(value[key]) + '</li>';
@@ -197,15 +199,20 @@ define([
             messageNode.innerHTML = div({class: 'messages-message'}, msg);
             node.appendChild(messageNode);
         }
-
+        function addError(msg) {
+            var node = container.querySelector('[data-element="messages"]'),
+                messageNode = document.createElement('div');
+            messageNode.innerHTML = div({class: 'messages-error', style: {color: 'red'}}, msg);
+            node.appendChild(messageNode);
+        }
         var errorId = 0;
         function nextErrorId() {
             errorId += 1;
             return errorId;
         }
         function showError(err) {
-            addMessage('ERROR!');
-            addMessage(err.message);
+            addError('ERROR!');
+            addError(err.message);
             console.error('ERROR!');
             console.error(err);
         }
@@ -214,6 +221,40 @@ define([
             var node = container.querySelector('[data-element="messages"]');
             node.innerHTML = '';
         }
+
+        function objectLayout(type, ref, methods) {
+            return div([
+                div({style: {fontWeight: 'bold'}}, 'Type'),
+                div(type),
+                div({style: {fontWeight: 'bold'}}, 'Ref'),
+                div(ref),
+                div({style: {fontWeight: 'bold'}}, 'Name'),
+                div({dataElement: 'name'}),
+                table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
+                    colgroup([
+                        col({style: {width: '20%', overflow: 'scroll'}}),
+                        col({style: {width: '50%', overflow: 'scroll'}}),
+                        col({style: {width: '20%', overflow: 'scroll'}}),
+                        col({style: {width: '10%', overflow: 'scroll'}}),
+                    ]),
+                    tr([
+                        th('Method'),
+                        th('Result'),
+                        th('Type'),
+                        th('Time')
+                    ])
+                ].concat(methods.map(function (method) {
+                    return tr({dataField: method.name}, [
+                        td(div({dataElement: 'method', style: {overflowX: 'auto'}}, method.name)),
+                        td(div({dataElement: 'value', style: {overflowX: 'auto'}})),
+
+                    td({dataElement: 'type'}),
+                        td({dataElement: 'time'})
+                    ]);
+                })))
+            ]);
+        }
+
         function renderTaxon(type, ref) {
             var methods = [
                 {
@@ -260,134 +301,111 @@ define([
                 token: runtime.service('session').getAuthToken()
             }),
                 results = {};
-            
+
             return Promise.try(function () {
-            
-                var layout = div([
-                    div({style: {fontWeight: 'bold'}}, 'Type'),
-                    div(type),
-                    div({style: {fontWeight: 'bold'}}, 'Ref'),
-                    div(ref),
-                    div({style: {fontWeight: 'bold'}}, 'Name'),
-                    div({dataElement: 'name'}),
-                    
-                    table({class: 'table table-striped'}, [
-                        tr([
-                            th('Method'),
-                            th('Result'),
-                            th('Type'),
-                            th('Time')
-                        ])
-                    ].concat(methods.map(function (method) {
-                        return tr({dataField: method.name}, [
-                            td({dataElement: 'method'}, method.name),
-                            td({dataElement: 'value'}),
-                            td({dataElement: 'type'}),
-                            td({dataElement: 'time'})
-                        ]);
-                    })))
-                ]);
-                
+
+                var layout = objectLayout(type, ref, methods);
+
                 setPlace('output', layout);
-                
+
                 return workspace.get_object_info_new({
                     objects: [{ref: ref}],
                     includeMetadata: 1,
                     ignoreErrors: 1
                 })
-                .then(function (objectInfo) {
-                    return serviceUtils.object_info_to_object(objectInfo[0]);
-                })
-                .then(function (objectInfo) {
-                    var place = getPlace('output');
+                    .then(function (objectInfo) {
+                        return serviceUtils.object_info_to_object(objectInfo[0]);
+                    })
+                    .then(function (objectInfo) {
+                        var place = getPlace('output');
                         document.getElementById(place).querySelector('[data-element="name"]').innerHTML = objectInfo.name;
-                    return Taxon.make({
-                        ref: ref,
-                        url: runtime.getConfig('services.taxon_api.url'),
-                        token: runtime.service('session').getAuthToken(),
-                        timeout: 30000
-                    });
-                })
-                .then(function (taxon) {
-                    addMessage('Starting method async loop');
-                    var start = new Date().getTime();
-                    return new Promise(function (resolve, reject) {
-                        function next(nextMethods) {
-                            if (nextMethods.length === 0) {
-                                resolve();
-                                return;
-                            }
-                            var method = nextMethods.shift();
-                            if (!method.ignore) {
-                                showField(method.name, 'Loading...');
-                                var args = method.arguments && method.arguments.map(function (argument) {
-                                    if (typeof argument === 'function') {
-                                        return argument();
-                                    }
-                                    return argument;
-                                });
-                                taxon[method.name].apply(taxon, args)
-                                    .then(function (value) {
-                                        results[method.name] = value;
-                                        var elapsed = (new Date()).getTime() - start;
-                                        addMessage('showing field ' + method.name);
-                                        showField(method.name, value, elapsed, {limit: method.limit});
-                                        return next(nextMethods);
-                                    })
-                                    .catch(Taxon.AttributeException, function (err) {
-                                        showField(method.name, '* n/a to this object *');
-                                        return next(nextMethods);
-                                    })
-                                    .catch(function (err) {
-                                        var id = nextErrorId();
-                                        showField(method.name, 'ERROR - see log #' + id);
-                                        console.log('ERROR #' + id + ' : ' + method);
-                                        console.log(err);
-                                        reject(err);
+                        return Taxon.make({
+                            ref: ref,
+                            url: runtime.getConfig('services.taxon_api.url'),
+                            token: runtime.service('session').getAuthToken(),
+                            timeout: 30000
+                        });
+                    })
+                    .then(function (taxon) {
+                        addMessage('Starting method async loop');
+                        var start = new Date().getTime();
+                        return new Promise(function (resolve, reject) {
+                            function next(nextMethods) {
+                                if (nextMethods.length === 0) {
+                                    resolve();
+                                    return;
+                                }
+                                var method = nextMethods.shift();
+                                if (!method.ignore) {
+                                    showField(method.name, 'Loading...');
+                                    var args = method.arguments && method.arguments.map(function (argument) {
+                                        if (typeof argument === 'function') {
+                                            return argument();
+                                        }
+                                        return argument;
                                     });
-                            } else {
-                                next(nextMethods);
+                                    taxon[method.name].apply(taxon, args)
+                                        .then(function (value) {
+                                            results[method.name] = value;
+                                            var elapsed = (new Date()).getTime() - start;
+                                            addMessage('showing field ' + method.name);
+                                            showField(method.name, value, elapsed, {limit: method.limit});
+                                            return next(nextMethods);
+                                        })
+                                        .catch(Taxon.AttributeException, function (err) {
+                                            showField(method.name, '* n/a to this object *');
+                                            return next(nextMethods);
+                                        })
+                                        .catch(function (err) {
+                                            var id = nextErrorId();
+                                            showField(method.name, 'ERROR - see log #' + id);
+                                            console.log('ERROR #' + id + ' : ' + method);
+                                            console.log(err);
+                                            reject(err);
+                                        });
+                                } else {
+                                    next(nextMethods);
+                                }
+                                return null;
                             }
-                            return null;
+                            next(methods);
+                        });
+                    })
+
+                    .then(function () {
+                        addMessage('done');
+                    })
+                    .catch(function (err) {
+                        addMessage('done, with error');
+                        console.log('ERROR');
+                        if (err instanceof Taxon.ClientException) {
+                            showError(err);
+                        } else if (err instanceof Thrift.TTransportError) {
+                            showError(err);
+                        } else if (err instanceof Thrift.TException) {
+                            showError({
+                                name: 'ThriftException',
+                                reason: err.name,
+                                message: err.getMessage()
+                            });
+                        } else if (err instanceof Taxon.AttributeException) {
+                            showError({
+                                name: 'AttributeException',
+                                reason: err.name,
+                                message: 'This attribute is not supported for this object'
+                            });
+                        } else {
+                            console.log(err);
+                            showError({
+                                type: 'UnknownError',
+                                message: 'Check the browser console'
+                            });
                         }
-                        next(methods);
                     });
-                })
-                
-                .then(function () {
-                    addMessage('done');
-                })
-                .catch(function (err) {
-                    addMessage('done, with error');
-                    console.log('ERROR');
-                    if (err instanceof Taxon.ClientException) {
-                        showError(err);
-                    } else if (err instanceof Thrift.TTransportError) {
-                        showError(err);
-                    } else if (err instanceof Thrift.TException) {
-                        showError({
-                            name: 'ThriftException',
-                            reason: err.name,
-                            message: err.getMessage()
-                        });
-                    } else if (err instanceof Taxon.AttributeException) {
-                        showError({
-                            name: 'AttributeException',
-                            reason: err.name,
-                            message: 'This attribute is not supported for this object'
-                        });
-                    } else {
-                        console.log(err);
-                        showError({
-                            type: 'UnknownError',
-                            message: 'Check the browser console'
-                        });
-                    }
-                });
             });
         }
-        
-        
+
+
         function renderAssembly(type, ref) {
             var methods = [
                 {
@@ -462,134 +480,407 @@ define([
                 token: runtime.service('session').getAuthToken()
             }),
                 results = {};
-            
+
             return Promise.try(function () {
-            
-                var layout = div([
-                    div({style: {fontWeight: 'bold'}}, 'Type'),
-                    div(type),
-                     div({style: {fontWeight: 'bold'}}, 'Ref'),
-                    div(ref),
-                    div({style: {fontWeight: 'bold'}}, 'Name'),
-                    div({dataElement: 'name'}),
-                    
-                    table({class: 'table table-striped'}, [
-                        tr([
-                            th('Method'),
-                            th('Result'),
-                            th('Type'),
-                            th('Time')
-                        ])
-                    ].concat(methods.map(function (method) {
-                        return tr({dataField: method.name}, [
-                            td({dataElement: 'method'}, method.name),
-                            td({dataElement: 'value'}),
-                            td({dataElement: 'type'}),
-                            td({dataElement: 'time'})
-                        ]);
-                    })))
-                ]);
-                
+
+                var layout = objectLayout(type, ref, methods);
+
                 setPlace('output', layout);
-                
+
                 return workspace.get_object_info_new({
                     objects: [{ref: ref}],
                     includeMetadata: 1,
                     ignoreErrors: 1
                 })
-                .then(function (objectInfo) {
-                    return serviceUtils.object_info_to_object(objectInfo[0]);
-                })
-                .then(function (objectInfo) {
-                    var place = getPlace('output');
+                    .then(function (objectInfo) {
+                        return serviceUtils.object_info_to_object(objectInfo[0]);
+                    })
+                    .then(function (objectInfo) {
+                        var place = getPlace('output');
                         document.getElementById(place).querySelector('[data-element="name"]').innerHTML = objectInfo.name;
-                    return Assembly.make({
-                        ref: ref,
-                        url: runtime.getConfig('services.assembly_api.url'),
-                        token: runtime.service('session').getAuthToken(),
-                        timeout: 30000
-                    });
-                })
-                .then(function (api) {
-                    addMessage('Starting method async loop');
-                    var start = new Date().getTime();
-                    return new Promise(function (resolve, reject) {
-                        function next(nextMethods) {
-                            if (nextMethods.length === 0) {
-                                resolve();
-                                return;
-                            }
-                            var method = nextMethods.shift();
-                            if (!method.ignore) {
-                                showField(method.name, 'Loading...');
-                                var args = method.arguments && method.arguments.map(function (argument) {
-                                    if (typeof argument === 'function') {
-                                        return argument();
-                                    }
-                                    return argument;
-                                });
-                                api[method.name].apply(api, args)
-                                    .then(function (value) {
-                                        results[method.name] = value;
-                                        var elapsed = (new Date()).getTime() - start;
-                                        addMessage('showing field ' + method.name);
-                                        showField(method.name, value, elapsed, {limit: method.limit});
-                                        return next(nextMethods);
-                                    })
-                                    .catch(Assembly.AttributeException, function (err) {
-                                        showField(method.name, '* n/a to this object *');
-                                        return next(nextMethods);
-                                    })
-                                    .catch(function (err) {
-                                        var id = nextErrorId();
-                                        showField(method.name, 'ERROR - see log #' + id);
-                                        console.log('ERROR #' + id + ' : ' + method);
-                                        console.log(err);
-                                        reject(err);
+                        return Assembly.make({
+                            ref: ref,
+                            url: runtime.getConfig('services.assembly_api.url'),
+                            token: runtime.service('session').getAuthToken(),
+                            timeout: 30000
+                        });
+                    })
+                    .then(function (api) {
+                        addMessage('Starting method async loop');
+                        var start = new Date().getTime();
+                        return new Promise(function (resolve, reject) {
+                            function next(nextMethods) {
+                                if (nextMethods.length === 0) {
+                                    resolve();
+                                    return;
+                                }
+                                var method = nextMethods.shift();
+                                if (!method.ignore) {
+                                    showField(method.name, 'Loading...');
+                                    var args = method.arguments && method.arguments.map(function (argument) {
+                                        if (typeof argument === 'function') {
+                                            return argument();
+                                        }
+                                        return argument;
                                     });
-                            } else {
-                                next(nextMethods);
+                                    api[method.name].apply(api, args)
+                                        .then(function (value) {
+                                            results[method.name] = value;
+                                            var elapsed = (new Date()).getTime() - start;
+                                            addMessage('showing field ' + method.name);
+                                            showField(method.name, value, elapsed, {limit: method.limit});
+                                            return next(nextMethods);
+                                        })
+                                        .catch(Assembly.AttributeException, function (err) {
+                                            showField(method.name, '* n/a to this object *');
+                                            return next(nextMethods);
+                                        })
+                                        .catch(function (err) {
+                                            var id = nextErrorId();
+                                            showField(method.name, 'ERROR - see log #' + id);
+                                            console.log('ERROR #' + id + ' : ' + method);
+                                            console.log(err);
+                                            reject(err);
+                                        });
+                                } else {
+                                    next(nextMethods);
+                                }
+                                return null;
                             }
-                            return null;
+                            next(methods);
+                        });
+                    })
+
+                    .then(function () {
+                        addMessage('done');
+                    })
+                    .catch(function (err) {
+                        addMessage('done, with error');
+                        console.log('ERROR');
+                        if (err instanceof Assembly.ClientException) {
+                            showError(err);
+                        } else if (err instanceof Thrift.TTransportError) {
+                            showError(err);
+                        } else if (err instanceof Thrift.TException) {
+                            showError({
+                                name: 'ThriftException',
+                                reason: err.name,
+                                message: err.getMessage()
+                            });
+                        } else if (err instanceof Assembly.AttributeException) {
+                            showError({
+                                name: 'AttributeException',
+                                reason: err.name,
+                                message: 'This attribute is not supported for this object'
+                            });
+                        } else {
+                            console.log(err);
+                            showError({
+                                type: 'UnknownError',
+                                message: 'Check the browser console'
+                            });
                         }
-                        next(methods);
                     });
-                })
-                
-                .then(function () {
-                    addMessage('done');
-                })
-                .catch(function (err) {
-                    addMessage('done, with error');
-                    console.log('ERROR');
-                    if (err instanceof Assembly.AssemblyException) {
-                        showError(err);
-                    } else if (err instanceof Thrift.TTransportError) {
-                        showError(err);
-                    } else if (err instanceof Thrift.TException) {
-                        showError({
-                            name: 'ThriftException',
-                            reason: err.name,
-                            message: err.getMessage()
-                        });
-                    } else if (err instanceof Assembly.AttributeException) {
-                        showError({
-                            name: 'AttributeException',
-                            reason: err.name,
-                            message: 'This attribute is not supported for this object'
-                        });
-                    } else {
-                        console.log(err);
-                        showError({
-                            type: 'UnknownError',
-                            message: 'Check the browser console'
-                        });
-                    }
-                });
             });
         }
 
-        function renderType(api, type, objects) {           
+        function renderGenomeAnnotation(type, ref) {
+            var methods = [
+                {
+                    name: 'getTaxon',
+                    type: 'string',
+                    use: true
+                },
+                {
+                    name: 'getAssembly',
+                    type: 'string',
+                    use: true
+                },
+                {
+                    name: 'getFeatureTypes',
+                    type: 'array of string ',
+                    use: true
+                },
+                {
+                    name: 'getFeatureTypeDescriptions',
+                    type: 'object (string -> number)',
+                    limit: 100,
+                    use: true
+                },
+                {
+                    name: 'getFeatureTypeCounts',
+                    type: 'object (string -> number)',
+                    limit: 100,
+                    arguments: [
+                        ['crs', 'gene', 'loci', 'trm', 'pbs', 'opr', 'sRNA', 'rna', 'crispr', 'pseudo', 'pp', 'bs', 'locus', 'prm', 'att', 'rsw', 'mRNA', 'CDS', 'pi', 'PEG', 'trnspn']
+                    ],
+                    use: true
+                },
+                {
+                    name: 'getFeatureIds',
+                    type: 'object (FeatureIdMapping)',
+                    arguments: [
+                        {
+//                    type_list: [],
+//                    region_list: [],
+//                    function_list: [],
+//                    alias_list: []
+                        },
+                        // type, region, function, alias
+                        'type'
+                    ],
+                    use: true
+                },
+                {
+                    name: 'getFeatures',
+                    type: 'object (string - > FeatureData)',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.CDS) {
+                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    use: true
+
+                },
+                {
+                    name: 'getProteins',
+                    type: 'array (of ProteinData)',
+                    use: true
+                },
+                {
+                    name: 'getFeatureLocations',
+                    type: 'object (string -> (list of Region)',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.CDS) {
+                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    use: true
+                },
+                {
+                    name: 'getFeaturePublications',
+                    type: 'object (string -> (list of string)',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.CDS) {
+                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    use: true
+                },
+                {
+                    name: 'getFeatureDNA',
+                    type: 'object (string -> string)',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.CDS) {
+                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    use: true
+                },
+                {
+                    name: 'getFeatureFunctions',
+                    type: 'object (string -> string)',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.CDS) {
+                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    use: true
+                },
+                // does not load, check out spec and impl.
+                {
+                    name: 'getFeatureAliases',
+                    type: 'object (string -> array of string)',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.CDS) {
+                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    use: true
+                },
+                {
+                    name: 'getCDSByGene',
+                    type: 'array of string',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.gene) {
+                                return results.getFeatureIds.by_type.gene.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    filter: function (featureList) {
+                        if (featureList === undefined || featureList.length === 0) {
+                            return false;
+                        }
+                        return true;
+                    },
+                    use: true
+                },
+                {
+                    name: 'getCDSBymRNA',
+                    type: 'array of string',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.mRNA) {
+                                return results.getFeatureIds.by_type.mRNA.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    use: true
+                },
+                {
+                    name: 'getGeneByCDS',
+                    type: 'object(-> string)',
+                    arguments: [
+                        function () {
+                            if (results.getFeatureIds.by_type.CDS) {
+                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            }
+                            return [];
+                        }
+                    ],
+                    use: true
+                }
+            ], workspace = new Workspace(runtime.getConfig('services.workspace.url'), {
+                token: runtime.service('session').getAuthToken()
+            }),
+                results = {};
+
+            return Promise.try(function () {
+
+                var layout = objectLayout(type, ref, methods);
+
+                setPlace('output', layout);
+
+                return workspace.get_object_info_new({
+                    objects: [{ref: ref}],
+                    includeMetadata: 1,
+                    ignoreErrors: 1
+                })
+                    .then(function (objectInfo) {
+                        return serviceUtils.object_info_to_object(objectInfo[0]);
+                    })
+                    .then(function (objectInfo) {
+                        var place = getPlace('output');
+                        document.getElementById(place).querySelector('[data-element="name"]').innerHTML = objectInfo.name;
+                        return GenomeAnnotation.make({
+                            ref: ref,
+                            url: runtime.getConfig('services.genomeAnnotation_api.url'),
+                            token: runtime.service('session').getAuthToken(),
+                            timeout: 30000
+                        });
+                    })
+                    .then(function (api) {
+                        addMessage('Starting method async loop');
+                        var start = new Date().getTime();
+                        return new Promise(function (resolve, reject) {
+                            function next(nextMethods) {
+                                if (nextMethods.length === 0) {
+                                    resolve();
+                                    return;
+                                }
+                                var method = nextMethods.shift();
+                                if (!method.ignore) {
+                                    showField(method.name, 'Loading...');
+                                    var args = method.arguments && method.arguments.map(function (argument) {
+                                        if (typeof argument === 'function') {
+                                            return argument();
+                                        }
+                                        return argument;
+                                    });
+                                    var run;
+                                    if (method.filter) {
+                                        run = method.filter.apply(args);
+                                    } else {
+                                        run = true;
+                                    }
+                                    if (run) {
+                                        api[method.name].apply(api, args)
+                                            .then(function (value) {
+                                                results[method.name] = value;
+                                                var elapsed = (new Date()).getTime() - start;
+                                                addMessage('showing field ' + method.name);
+                                                showField(method.name, value, elapsed, {limit: method.limit});
+                                                return next(nextMethods);
+                                            })
+                                            .catch(GenomeAnnotation.AttributeException, function (err) {
+                                                showField(method.name, '* n/a to this object *');
+                                                return next(nextMethods);
+                                            })
+                                            .catch(function (err) {
+                                                var id = nextErrorId();
+                                                showField(method.name, 'ERROR - see log #' + id);
+                                                console.log('ERROR #' + id + ' : ' + method);
+                                                console.log(err);
+                                                reject(err);
+                                            });
+                                    } else {
+                                        showField(method.name, '* skipped *');
+                                        next(nextMethods);
+                                    }
+                                } else {
+                                    next(nextMethods);
+                                }
+                                return null;
+                            }
+                            next(methods);
+                        });
+                    })
+
+                    .then(function () {
+                        addMessage('done');
+                    })
+                    .catch(function (err) {
+                        addMessage('done, with error');
+                        console.log('ERROR');
+                        if (err instanceof GenomeAnnotation.ClientException) {
+                            showError(err);
+                        } else if (err instanceof Thrift.TTransportError) {
+                            showError(err);
+                        } else if (err instanceof Thrift.TException) {
+                            showError({
+                                name: 'ThriftException',
+                                reason: err.name,
+                                message: err.getMessage()
+                            });
+                        } else if (err instanceof GenomeAnnotation.AttributeException) {
+                            showError({
+                                name: 'AttributeException',
+                                reason: err.name,
+                                message: 'This attribute is not supported for this object'
+                            });
+                        } else {
+                            console.log(err);
+                            showError({
+                                type: 'UnknownError',
+                                message: 'Check the browser console'
+                            });
+                        }
+                    });
+            });
+        }
+
+        function renderType(api, type, objects) {
             return table({class: 'table', style: {maxHeight: '300px', overflowY: 'scroll'}}, [
                 tr([
                     th('#'),
@@ -678,7 +969,7 @@ define([
             ]);
         }
 
-       
+
 
         function init(config) {
             layout = renderLayout();
@@ -701,15 +992,18 @@ define([
                     api = e.target.getAttribute('data-api');
                 if (action && action === 'selectObject') {
                     switch (api) {
-                        case 'taxon': 
-                            renderTaxon(objectType, objectRef);                               
+                        case 'taxon':
+                            renderTaxon(objectType, objectRef);
                             break;
                         case 'assembly':
                             renderAssembly(objectType, objectRef);
                             break;
+                        case 'genomeAnnotation':
+                            renderGenomeAnnotation(objectType, objectRef);
+                            break;
                     }
-                    
-                    
+
+
                     // alert('Selected ' + objectRef + ', of type ' + objectType);
                 }
             });
@@ -718,6 +1012,7 @@ define([
         function start(params) {
             clearMessages();
             addMessage('starting...');
+            runtime.send('ui', 'setTitle', 'Data API Demo')
             setupEvents();
             return widgetSet.start(params);
         }
