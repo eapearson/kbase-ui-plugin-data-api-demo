@@ -5,12 +5,12 @@ define([
     'kb/common/html',
     'kb/common/dom',
     'kb/widget/widgetSet',
-    'kb/service/client/Workspace',
+    'kb/service/client/workspace',
     'kb/service/utils',
     'kb/data/taxon',
     'kb/data/assembly',
     'kb/data/genomeAnnotation',
-    'thrift'
+    'kb/thrift/core'
 ], function (Promise, html, dom, WidgetSet, Workspace, serviceUtils, Taxon, Assembly, GenomeAnnotation, Thrift) {
     'use strict';
     function factory(config) {
