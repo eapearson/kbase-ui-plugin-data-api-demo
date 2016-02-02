@@ -445,8 +445,8 @@ define([
                     type: '',
                     arguments: [
                         function () {
-                            if (results.contigIds) {
-                                return results.contigIds.slice(0, 5);
+                            if (results.contig_ids) {
+                                return results.contig_ids.slice(0, 5);
                             }
                             return [];
                         }
@@ -457,8 +457,8 @@ define([
                     type: '',
                     arguments: [
                         function () {
-                            if (results.contigIds) {
-                                return results.contigIds.slice(0, 5);
+                            if (results.contig_ids) {
+                                return results.contig_ids.slice(0, 5);
                             }
                             return [];
                         }
@@ -469,8 +469,8 @@ define([
                     type: '',
                     arguments: [
                         function () {
-                            if (results.contigIds) {
-                                return results.contigIds.slice(0, 5);
+                            if (results.contig_ids) {
+                                return results.contig_ids.slice(0, 5);
                             }
                             return [];
                         }
@@ -636,8 +636,8 @@ define([
                     type: 'object (string - > FeatureData)',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.CDS) {
-                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            if (results.feature_ids.by_type.CDS) {
+                                return results.feature_ids.by_type.CDS.slice(0, 5);
                             }
                             return [];
                         }
@@ -655,8 +655,8 @@ define([
                     type: 'object (string -> (list of Region)',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.CDS) {
-                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            if (results.feature_ids.by_type.CDS) {
+                                return results.feature_ids.by_type.CDS.slice(0, 5);
                             }
                             return [];
                         }
@@ -668,8 +668,8 @@ define([
                     type: 'object (string -> (list of string)',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.CDS) {
-                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            if (results.feature_ids.by_type.CDS) {
+                                return results.feature_ids.by_type.CDS.slice(0, 5);
                             }
                             return [];
                         }
@@ -681,8 +681,8 @@ define([
                     type: 'object (string -> string)',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.CDS) {
-                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            if (results.feature_ids.by_type.CDS) {
+                                return results.feature_ids.by_type.CDS.slice(0, 5);
                             }
                             return [];
                         }
@@ -694,8 +694,8 @@ define([
                     type: 'object (string -> string)',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.CDS) {
-                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            if (results.feature_ids.by_type.CDS) {
+                                return results.feature_ids.by_type.CDS.slice(0, 5);
                             }
                             return [];
                         }
@@ -708,8 +708,8 @@ define([
                     type: 'object (string -> array of string)',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.CDS) {
-                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            if (results.feature_ids.by_type.CDS) {
+                                return results.feature_ids.by_type.CDS.slice(0, 5);
                             }
                             return [];
                         }
@@ -721,8 +721,8 @@ define([
                     type: 'array of string',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.gene) {
-                                return results.getFeatureIds.by_type.gene.slice(0, 5);
+                            if (results.feature_ids.by_type.gene) {
+                                return results.feature_ids.by_type.gene.slice(0, 5);
                             }
                             return [];
                         }
@@ -740,8 +740,8 @@ define([
                     type: 'array of string',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.mRNA) {
-                                return results.getFeatureIds.by_type.mRNA.slice(0, 5);
+                            if (results.feature_ids.by_type.mRNA) {
+                                return results.feature_ids.by_type.mRNA.slice(0, 5);
                             }
                             return [];
                         }
@@ -753,8 +753,8 @@ define([
                     type: 'object(-> string)',
                     arguments: [
                         function () {
-                            if (results.getFeatureIds.by_type.CDS) {
-                                return results.getFeatureIds.by_type.CDS.slice(0, 5);
+                            if (results.feature_ids.by_type.CDS) {
+                                return results.feature_ids.by_type.CDS.slice(0, 5);
                             }
                             return [];
                         }
