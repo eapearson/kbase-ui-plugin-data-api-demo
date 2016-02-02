@@ -380,9 +380,9 @@ define([
                         console.log('ERROR');
                         if (err instanceof Taxon.ClientException) {
                             showError(err);
-                        } else if (err instanceof Taxon.TTransportError) {
+                        } else if (err instanceof Thrift.TTransportError) {
                             showError(err);
-                        } else if (err instanceof Taxon.TException) {
+                        } else if (err instanceof Thrift.TException) {
                             showError({
                                 name: 'ThriftException',
                                 reason: err.name,
@@ -559,9 +559,9 @@ define([
                         console.log('ERROR');
                         if (err instanceof Assembly.ClientException) {
                             showError(err);
-                        } else if (err instanceof Assembly.TTransportError) {
+                        } else if (err instanceof Thrift.TTransportError) {
                             showError(err);
-                        } else if (err instanceof Assembly.TException) {
+                        } else if (err instanceof Thrift.TException) {
                             showError({
                                 name: 'ThriftException',
                                 reason: err.name,
@@ -855,9 +855,9 @@ define([
                         console.log('ERROR');
                         if (err instanceof GenomeAnnotation.ClientException) {
                             showError(err);
-                        } else if (err instanceof GenomeAnnotation.TTransportError) {
+                        } else if (err instanceof Thrift.TTransportError) {
                             showError(err);
-                        } else if (err instanceof GenomeAnnotation.TException) {
+                        } else if (err instanceof Thrift.TException) {
                             showError({
                                 name: 'ThriftException',
                                 reason: err.name,
