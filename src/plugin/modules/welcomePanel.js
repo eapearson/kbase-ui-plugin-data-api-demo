@@ -258,43 +258,43 @@ define([
         function renderTaxon(type, ref) {
             var methods = [
                 {
-                    name: 'getParent',
+                    name: 'parent',
                     type: 'string'
                 },
                 {
-                    name: 'getChildren',
+                    name: 'children',
                     type: 'array of string'
                 },
                 {
-                    name: 'getGenomeAnnotations',
+                    name: 'genome_annotations',
                     type: 'array of string '
                 },
                 {
-                    name: 'getScientificLineage',
+                    name: 'scientific_lineage',
                     type: 'array of string'
                 },
                 {
-                    name: 'getScientificName',
+                    name: 'scientific_name',
                     type: 'array of string'
                 },
                 {
-                    name: 'getTaxonomicId',
+                    name: 'taxonomic_id',
                     type: 'array of string'
                 },
                 {
-                    name: 'getKingdom',
+                    name: 'kingdom',
                     type: 'array of string'
                 },
                 {
-                    name: 'getDomain',
+                    name: 'domain',
                     type: 'array of string'
                 },
                 {
-                    name: 'getGeneticCode',
+                    name: 'genetic_code',
                     type: 'array of string'
                 },
                 {
-                    name: 'getAliases',
+                    name: 'aliases',
                     type: 'array of string'
                 }
             ], workspace = new Workspace(runtime.getConfig('services.workspace.url'), {
@@ -319,7 +319,7 @@ define([
                     .then(function (objectInfo) {
                         var place = getPlace('output');
                         document.getElementById(place).querySelector('[data-element="name"]').innerHTML = objectInfo.name;
-                        return Taxon.make({
+                        return Taxon.client({
                             ref: ref,
                             url: runtime.getConfig('services.taxon_api.url'),
                             token: runtime.service('session').getAuthToken(),
@@ -380,9 +380,9 @@ define([
                         console.log('ERROR');
                         if (err instanceof Taxon.ClientException) {
                             showError(err);
-                        } else if (err instanceof Thrift.TTransportError) {
+                        } else if (err instanceof Taxon.TTransportError) {
                             showError(err);
-                        } else if (err instanceof Thrift.TException) {
+                        } else if (err instanceof Taxon.TException) {
                             showError({
                                 name: 'ThriftException',
                                 reason: err.name,
@@ -409,39 +409,39 @@ define([
         function renderAssembly(type, ref) {
             var methods = [
                 {
-                    name: 'getAssemblyId',
+                    name: 'assembly_id',
                     type: 'string'
                 },
                 {
-                    name: 'getGenomeAnnotation',
+                    name: 'genome_annotation',
                     type: ''
                 },
                 {
-                    name: 'getExternalSourceInfo',
+                    name: 'external_source_info',
                     type: ''
                 },
                 {
-                    name: 'getStats',
+                    name: 'stats',
                     type: ''
                 },
                 {
-                    name: 'getNumberContigs',
+                    name: 'number_contigs',
                     type: ''
                 },
                 {
-                    name: 'getGCContent',
+                    name: 'gc_content',
                     type: ''
                 },
                 {
-                    name: 'getDNASize',
+                    name: 'dna_size',
                     type: ''
                 },
                 {
-                    name: 'getContigIds',
+                    name: 'contig_ids',
                     type: ''
                 },
                 {
-                    name: 'getContigLengths',
+                    name: 'contig_lengths',
                     type: '',
                     arguments: [
                         function () {
@@ -453,7 +453,7 @@ define([
                     ]
                 },
                 {
-                    name: 'getContigGCContent',
+                    name: 'contig_gc_content',
                     type: '',
                     arguments: [
                         function () {
@@ -465,7 +465,7 @@ define([
                     ]
                 },
                 {
-                    name: 'getContigs',
+                    name: 'contigs',
                     type: '',
                     arguments: [
                         function () {
@@ -498,7 +498,7 @@ define([
                     .then(function (objectInfo) {
                         var place = getPlace('output');
                         document.getElementById(place).querySelector('[data-element="name"]').innerHTML = objectInfo.name;
-                        return Assembly.make({
+                        return Assembly.client({
                             ref: ref,
                             url: runtime.getConfig('services.assembly_api.url'),
                             token: runtime.service('session').getAuthToken(),
@@ -559,9 +559,9 @@ define([
                         console.log('ERROR');
                         if (err instanceof Assembly.ClientException) {
                             showError(err);
-                        } else if (err instanceof Thrift.TTransportError) {
+                        } else if (err instanceof Assembly.TTransportError) {
                             showError(err);
-                        } else if (err instanceof Thrift.TException) {
+                        } else if (err instanceof Assembly.TException) {
                             showError({
                                 name: 'ThriftException',
                                 reason: err.name,
@@ -587,28 +587,28 @@ define([
         function renderGenomeAnnotation(type, ref) {
             var methods = [
                 {
-                    name: 'getTaxon',
+                    name: 'taxon',
                     type: 'string',
                     use: true
                 },
                 {
-                    name: 'getAssembly',
+                    name: 'assembly',
                     type: 'string',
                     use: true
                 },
                 {
-                    name: 'getFeatureTypes',
+                    name: 'feature_types',
                     type: 'array of string ',
                     use: true
                 },
                 {
-                    name: 'getFeatureTypeDescriptions',
+                    name: 'feature_type_descriptions',
                     type: 'object (string -> number)',
                     limit: 100,
                     use: true
                 },
                 {
-                    name: 'getFeatureTypeCounts',
+                    name: 'feature_type_counts',
                     type: 'object (string -> number)',
                     limit: 100,
                     arguments: [
@@ -617,7 +617,7 @@ define([
                     use: true
                 },
                 {
-                    name: 'getFeatureIds',
+                    name: 'feature_ids',
                     type: 'object (FeatureIdMapping)',
                     arguments: [
                         {
@@ -632,7 +632,7 @@ define([
                     use: true
                 },
                 {
-                    name: 'getFeatures',
+                    name: 'features',
                     type: 'object (string - > FeatureData)',
                     arguments: [
                         function () {
@@ -646,12 +646,12 @@ define([
 
                 },
                 {
-                    name: 'getProteins',
+                    name: 'proteins',
                     type: 'array (of ProteinData)',
                     use: true
                 },
                 {
-                    name: 'getFeatureLocations',
+                    name: 'feature_locations',
                     type: 'object (string -> (list of Region)',
                     arguments: [
                         function () {
@@ -664,7 +664,7 @@ define([
                     use: true
                 },
                 {
-                    name: 'getFeaturePublications',
+                    name: 'feature_publications',
                     type: 'object (string -> (list of string)',
                     arguments: [
                         function () {
@@ -677,7 +677,7 @@ define([
                     use: true
                 },
                 {
-                    name: 'getFeatureDNA',
+                    name: 'feature_dna',
                     type: 'object (string -> string)',
                     arguments: [
                         function () {
@@ -690,7 +690,7 @@ define([
                     use: true
                 },
                 {
-                    name: 'getFeatureFunctions',
+                    name: 'feature_functions',
                     type: 'object (string -> string)',
                     arguments: [
                         function () {
@@ -704,7 +704,7 @@ define([
                 },
                 // does not load, check out spec and impl.
                 {
-                    name: 'getFeatureAliases',
+                    name: 'feature_aliases',
                     type: 'object (string -> array of string)',
                     arguments: [
                         function () {
@@ -717,7 +717,7 @@ define([
                     use: true
                 },
                 {
-                    name: 'getCDSByGene',
+                    name: 'cds_by_gene',
                     type: 'array of string',
                     arguments: [
                         function () {
@@ -736,7 +736,7 @@ define([
                     use: true
                 },
                 {
-                    name: 'getCDSBymRNA',
+                    name: 'cds_by_mrna',
                     type: 'array of string',
                     arguments: [
                         function () {
@@ -749,7 +749,7 @@ define([
                     use: true
                 },
                 {
-                    name: 'getGeneByCDS',
+                    name: 'gene_by_cds',
                     type: 'object(-> string)',
                     arguments: [
                         function () {
@@ -783,7 +783,7 @@ define([
                     .then(function (objectInfo) {
                         var place = getPlace('output');
                         document.getElementById(place).querySelector('[data-element="name"]').innerHTML = objectInfo.name;
-                        return GenomeAnnotation.make({
+                        return GenomeAnnotation.client({
                             ref: ref,
                             url: runtime.getConfig('services.genomeAnnotation_api.url'),
                             token: runtime.service('session').getAuthToken(),
@@ -855,9 +855,9 @@ define([
                         console.log('ERROR');
                         if (err instanceof GenomeAnnotation.ClientException) {
                             showError(err);
-                        } else if (err instanceof Thrift.TTransportError) {
+                        } else if (err instanceof GenomeAnnotation.TTransportError) {
                             showError(err);
-                        } else if (err instanceof Thrift.TException) {
+                        } else if (err instanceof GenomeAnnotation.TException) {
                             showError({
                                 name: 'ThriftException',
                                 reason: err.name,
