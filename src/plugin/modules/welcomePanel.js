@@ -413,7 +413,7 @@ define([
                     type: 'string'
                 },
                 {
-                    name: 'genome_annotation',
+                    name: 'genome_annotations',
                     type: ''
                 },
                 {
