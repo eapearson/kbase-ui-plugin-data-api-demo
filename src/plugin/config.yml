@@ -1,7 +1,7 @@
 ## Data API Demo Plugin
 ---
 package:
-    name: dataapidemo
+    name: data-api-demo
     description: Widgets for the Data API
     author: Erik Pearson
     date: January 12, 2016
@@ -13,31 +13,31 @@ source:
 install:
     widgets:
         -
-            module: plugins/dataapidemo/modules/welcomePanel
+            module: plugins/data-api-demo/modules/welcomePanel
             id: kb_dataapidemo_welcomePanel
             type: factory
         -
-            module: plugins/dataapidemo/modules/taxonPanel
+            module: plugins/data-api-demo/modules/taxonPanel
             id: kb_dataapidemo_taxonPanel
             type: factory       
         -
-            module: plugins/dataapidemo/modules/assemblyPanel
+            module: plugins/data-api-demo/modules/assemblyPanel
             id: kb_dataapidemo_assemblyPanel
             type: factory       
         -
-            module: plugins/dataapidemo/modules/lineageWidget
+            module: plugins/data-api-demo/modules/lineageWidget
             id: kb_dataapidemo_lineage
             type: factory
         -
-            module: plugins/dataapidemo/modules/scientificName
+            module: plugins/data-api-demo/modules/scientificName
             id: kb_dataapidemo_scientificName
             type: factory
         -
-            module: plugins/dataapidemo/modules/widgets/taxonSummary
+            module: plugins/data-api-demo/modules/widgets/taxonSummary
             id: kb_dataapidemo_taxonSummary
             type: factory
         -
-            module: plugins/dataapidemo/modules/widgets/assemblySummary
+            module: plugins/data-api-demo/modules/widgets/assemblySummary
             id: kb_dataapidemo_assemblySummary
             type: factory                   
     routes:
