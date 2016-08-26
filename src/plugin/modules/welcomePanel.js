@@ -331,6 +331,17 @@ define([
                             };
                         }
                     ]
+                },
+                {
+                    name: 'get_decorated_children',
+                    type: 'array of string',
+                    args: [
+                        function (context) {
+                            return {
+                                ref: context.ref
+                            };
+                        }
+                    ]
                 }
             ], workspace = new Workspace(runtime.getConfig('services.workspace.url'), {
                 token: runtime.service('session').getAuthToken()
