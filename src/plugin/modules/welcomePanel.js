@@ -10,8 +10,8 @@ define([
     'kb_sdk_clients/TaxonAPI/dev/TaxonAPIClient',
     'kb_sdk_clients/AssemblyAPI/dev/AssemblyAPIClient',
     'kb_sdk_clients/GenomeAnnotationAPI/dev/GenomeAnnotationAPIClient',
-    'kb_sdk_clients/ajax'
-], function (Promise, html, dom, WidgetSet, Workspace, serviceUtils, TaxonAPI, AssemblyAPI, GenomeAnnotationAPI, ajax) {
+    'kb_sdk_clients/exceptions'
+], function (Promise, html, dom, WidgetSet, Workspace, serviceUtils, TaxonAPI, AssemblyAPI, GenomeAnnotationAPI, exceptions) {
     'use strict';
     function factory(config) {
         var parent, container, runtime = config.runtime,
@@ -247,8 +247,7 @@ define([
                     return tr({dataField: method.name}, [
                         td(div({dataElement: 'method', style: {overflowX: 'auto'}}, method.name)),
                         td(div({dataElement: 'value', style: {overflowX: 'auto'}})),
-
-                    td({dataElement: 'type'}),
+                        td({dataElement: 'type'}),
                         td({dataElement: 'time'})
                     ]);
                 })))
@@ -263,52 +262,75 @@ define([
                 {
                     name: 'get_parent',
                     type: 'string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_children',
                     type: 'array of string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_genome_annotations',
                     type: 'array of string ',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_scientific_lineage',
                     type: 'array of string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_scientific_name',
                     type: 'array of string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_taxonomic_id',
                     type: 'array of string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_kingdom',
                     type: 'array of string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_domain',
                     type: 'array of string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_genetic_code',
                     type: 'array of string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_aliases',
                     type: 'array of string',
-                    arguments: [getRef]
+                    args: [getRef]
+                },
+                {
+                    name: 'get_all_data',
+                    type: 'array of string',
+                    args: [
+                        function (context) {
+                            return {
+                                ref: context.ref
+                            };
+                        }
+                    ]
+                },
+                {
+                    name: 'get_decorated_scientific_lineage',
+                    type: 'array of string',
+                    args: [
+                        function (context) {
+                            return {
+                                ref: context.ref,
+                                include_decorated_scientific_lineage: true
+                            };
+                        }
+                    ]
                 }
             ], workspace = new Workspace(runtime.getConfig('services.workspace.url'), {
                 token: runtime.service('session').getAuthToken()
@@ -354,7 +376,7 @@ define([
                                 var method = nextMethods.shift();
                                 if (!method.ignore) {
                                     showField(method.name, 'Loading...');
-                                    var args = method.arguments && method.arguments.map(function (argument) {
+                                    var args = method.args && method.args.map(function (argument) {
                                         if (typeof argument === 'function') {
                                             return argument(context);
                                         }
@@ -363,8 +385,7 @@ define([
                                     var methodFun = taxon[method.name];
                                     if (!methodFun) {
                                         console.error('ERROR no method', method.name, method, taxon);
-                                    } else { 
-                                        console.log('APPLY with args', args);
+                                    } else {
                                         taxon[method.name].apply(taxon, args)
                                             .then(function (value) {
                                                 results[method.name] = value;
@@ -373,7 +394,11 @@ define([
                                                 showField(method.name, value, elapsed, {limit: method.limit});
                                                 return next(nextMethods);
                                             })
-                                            .catch(ajax.JsonRpcError, function (err) {
+                                            .catch(exceptions.AttributeError, function (err) {
+                                                showField(method.name, 'AttributeError: In module ' + err.module + ', function ' + err.func + ' is not supported for this object');
+                                                return next(nextMethods);
+                                            })
+                                            .catch(exceptions.JsonRpcError, function (err) {
                                                 var id = nextErrorId();
                                                 showField(method.name, 'JSON RPC ERROR - see log #' + id);
                                                 console.error('ERROR #' + id + ' : ' + method.name + ' : ' + err.message);
@@ -389,7 +414,7 @@ define([
                                                 // reject(err);
                                                 return next(nextMethods);
                                             });
-                                        }
+                                    }
                                 } else {
                                     return next(nextMethods);
                                 }
@@ -422,47 +447,47 @@ define([
                 {
                     name: 'get_assembly_id',
                     type: 'string',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_genome_annotations',
                     type: '',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_external_source_info',
                     type: '',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_stats',
                     type: '',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_number_contigs',
                     type: '',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_gc_content',
                     type: '',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_dna_size',
                     type: '',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_contig_ids',
                     type: '',
-                    arguments: [getRef]
+                    args: [getRef]
                 },
                 {
                     name: 'get_contig_lengths',
                     type: '',
-                    arguments: [
+                    args: [
                         getRef,
                         function () {
                             if (results.contig_ids) {
@@ -475,7 +500,7 @@ define([
                 {
                     name: 'get_contig_gc_content',
                     type: '',
-                    arguments: [
+                    args: [
                         getRef,
                         function () {
                             if (results.contig_ids) {
@@ -488,7 +513,7 @@ define([
                 {
                     name: 'get_contigs',
                     type: '',
-                    arguments: [
+                    args: [
                         getRef,
                         function () {
                             if (results.contig_ids) {
@@ -542,7 +567,7 @@ define([
                                 var method = nextMethods.shift();
                                 if (!method.ignore) {
                                     showField(method.name, 'Loading...');
-                                    var args = method.arguments && method.arguments.map(function (argument) {
+                                    var args = method.args && method.args.map(function (argument) {
                                         if (typeof argument === 'function') {
                                             return argument(context);
                                         }
@@ -556,14 +581,18 @@ define([
                                             showField(method.name, value, elapsed, {limit: method.limit});
                                             return next(nextMethods);
                                         })
-                                        .catch(function (err) {
+                                        .catch(exceptions.AttributeError, function (err) {
+                                            showField(method.name, 'AttributeError: In module ' + err.module + ', function ' + err.func + ' is not supported for this object');
+                                            return next(nextMethods);
+                                        })
+                                        .catch(exceptions.JsonRpcError, function (err) {
                                             var id = nextErrorId();
-                                            showField(method.name, 'ERROR running method - see log #' + id);
-                                            console.log('ERROR #' + id + ' : ' + method.name);
-                                            console.log(err);
+                                            showField(method.name, err.message + ' : JSON RPC ERROR - see log #' + id);
+                                            console.error('ERROR #' + id + ' : ' + method.name + ' : ' + err.message);
+                                            console.error(err);
                                             // reject(err);
                                             return next(nextMethods);
-                                        });
+                                        })
                                 } else {
                                     return next(nextMethods);
                                 }
@@ -596,66 +625,66 @@ define([
                     name: 'get_taxon',
                     type: 'string',
                     use: true,
-                    arguments: [function (ctx) {
-                        return {
-                            ref: ctx.ref
-                        };
-                    }]
+                    args: [function (ctx) {
+                            return {
+                                ref: ctx.ref
+                            };
+                        }]
                 },
                 {
                     name: 'get_assembly',
                     type: 'string',
                     use: true,
-                    arguments: [function (ctx) {
-                        return {
-                            ref: ctx.ref
-                        };
-                    }]
+                    args: [function (ctx) {
+                            return {
+                                ref: ctx.ref
+                            };
+                        }]
                 },
                 {
                     name: 'get_feature_types',
                     type: 'array of string ',
                     use: true,
-                    arguments: [function (ctx) {
-                        return {
-                            ref: ctx.ref
-                        };
-                    }]
+                    args: [function (ctx) {
+                            return {
+                                ref: ctx.ref
+                            };
+                        }]
                 },
                 {
                     name: 'get_feature_type_descriptions',
                     type: 'object (string -> number)',
                     limit: 100,
                     use: true,
-                    arguments: [function (ctx) {
-                        return {
-                            ref: ctx.ref
-                        };
-                    }]
+                    args: [function (ctx) {
+                            return {
+                                ref: ctx.ref
+                            };
+                        }]
                 },
                 {
                     name: 'get_feature_type_counts',
                     type: 'object (string -> number)',
                     limit: 100,
-                    arguments: [function (ctx) {
-                        return {
-                            ref: ctx.ref,
-                            feature_type_list: ['crs', 'gene', 'loci', 'trm', 'pbs', 'opr', 'sRNA', 'rna', 'crispr', 'pseudo', 'pp', 'bs', 'locus', 'prm', 'att', 'rsw', 'mRNA', 'CDS', 'pi', 'PEG', 'trnspn']
-                        };
-                    }],
+                    args: [function (ctx) {
+                            return {
+                                ref: ctx.ref,
+                                feature_type_list: ['crs', 'gene', 'loci', 'trm', 'pbs', 'opr', 'sRNA', 'rna', 'crispr', 'pseudo', 'pp', 'bs', 'locus', 'prm', 'att', 'rsw', 'mRNA', 'CDS', 'pi', 'PEG', 'trnspn']
+                            };
+                        }],
                     use: true
                 },
                 {
                     name: 'get_feature_ids',
                     type: 'object (FeatureIdMapping)',
-                    arguments: [function (ctx) {
-                        return {
-                            ref: ctx.ref,
-                            filters: {},
-                            group_by: 'type'
-                        };
-                    }],
-                    xarguments: [
+                    args: [function (ctx) {
+                            return {
+                                ref: ctx.ref,
+                                filters: {},
+                                group_by: 'type'
+                            };
+                        }],
+                    xargs: [
                         getRef,
                         {
 //                    type_list: [],
@@ -671,17 +700,17 @@ define([
                 {
                     name: 'get_features',
                     type: 'object (string - > FeatureData)',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
-                            featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            feature_id_list: featureIdList,
-                            exclude_sequence: false
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
+                                featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                feature_id_list: featureIdList,
+                                exclude_sequence: false
+                            };
+                        }],
                     use: true
 
                 },
@@ -689,101 +718,101 @@ define([
                     name: 'get_proteins',
                     type: 'array (of ProteinData)',
                     use: true,
-                     arguments: [function (ctx) {
-                        return {
-                            ref: ctx.ref
-                        };
-                    }]
+                    args: [function (ctx) {
+                            return {
+                                ref: ctx.ref
+                            };
+                        }]
                 },
                 {
                     name: 'get_feature_locations',
                     type: 'object (string -> (list of Region)',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
-                            featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            feature_id_list: featureIdList
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
+                                featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                feature_id_list: featureIdList
+                            };
+                        }],
                     use: true
                 },
                 {
                     name: 'get_feature_publications',
                     type: 'object (string -> (list of string)',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
-                            featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            feature_id_list: featureIdList
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
+                                featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                feature_id_list: featureIdList
+                            };
+                        }],
                     use: true
                 },
                 {
                     name: 'get_feature_dna',
                     type: 'object (string -> string)',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
-                            featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            feature_id_list: featureIdList
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
+                                featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                feature_id_list: featureIdList
+                            };
+                        }],
                     use: true
                 },
                 {
                     name: 'get_feature_functions',
                     type: 'object (string -> string)',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
-                            featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            feature_id_list: featureIdList
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
+                                featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                feature_id_list: featureIdList
+                            };
+                        }],
                     use: true
                 },
                 // does not load, check out spec and impl.
                 {
                     name: 'get_feature_aliases',
                     type: 'object (string -> array of string)',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
-                            featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            feature_id_list: featureIdList
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
+                                featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                feature_id_list: featureIdList
+                            };
+                        }],
                     use: true
                 },
                 {
                     name: 'get_cds_by_gene',
                     type: 'array of string',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.gene) {
-                            featureIdList = arg.results.get_feature_ids.by_type.gene.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            gene_id_list: featureIdList
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.gene) {
+                                featureIdList = arg.results.get_feature_ids.by_type.gene.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                gene_id_list: featureIdList
+                            };
+                        }],
                     filter: function (featureList) {
                         if (featureList === undefined || featureList.length === 0) {
                             return false;
@@ -795,31 +824,31 @@ define([
                 {
                     name: 'get_cds_by_mrna',
                     type: 'array of string',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.mRNA) {
-                            featureIdList = arg.results.get_feature_ids.by_type.mRNA.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            mrna_id_list: featureIdList
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.mRNA) {
+                                featureIdList = arg.results.get_feature_ids.by_type.mRNA.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                mrna_id_list: featureIdList
+                            };
+                        }],
                     use: true
                 },
                 {
                     name: 'get_gene_by_cds',
                     type: 'object(-> string)',
-                    arguments:  [function (arg) {
-                        var featureIdList = [];
-                        if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
-                            featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
-                        }
-                        return {
-                            ref: arg.ref,
-                            cds_id_list: featureIdList
-                        };
-                    }],
+                    args: [function (arg) {
+                            var featureIdList = [];
+                            if (arg.results && arg.results.get_feature_ids && results.get_feature_ids.by_type.CDS) {
+                                featureIdList = arg.results.get_feature_ids.by_type.CDS.slice(0, 5);
+                            }
+                            return {
+                                ref: arg.ref,
+                                cds_id_list: featureIdList
+                            };
+                        }],
                     use: true
                 }
             ], workspace = new Workspace(runtime.getConfig('services.workspace.url'), {
@@ -868,7 +897,7 @@ define([
                                 var method = nextMethods.shift();
                                 if (!method.ignore) {
                                     showField(method.name, 'Loading...');
-                                    var args = method.arguments && method.arguments.map(function (argument) {
+                                    var args = method.args && method.args.map(function (argument) {
                                         if (typeof argument === 'function') {
                                             return argument(context);
                                         }
@@ -890,14 +919,18 @@ define([
                                                 showField(method.name, value, elapsed, {limit: method.limit});
                                                 return next(nextMethods);
                                             })
-                                            .catch(function (err) {
+                                            .catch(exceptions.AttributeError, function (err) {
+                                                showField(method.name, 'AttributeError: In module ' + err.module + ', function ' + err.func + ' is not supported for this object');
+                                                return next(nextMethods);
+                                            })
+                                            .catch(exceptions.JsonRpcError, function (err) {
                                                 var id = nextErrorId();
-                                                showField(method.name, 'ERROR running method - see log #' + id);
-                                                console.log('ERROR #' + id + ' : ' + method.name);
-                                                console.log(err);
+                                                showField(method.name, err.message + ' : JSON RPC ERROR - see log #' + id);
+                                                console.error('ERROR #' + id + ' : ' + method.name + ' : ' + err.message);
+                                                console.error(err);
                                                 // reject(err);
                                                 return next(nextMethods);
-                                            });
+                                            })
                                     } else {
                                         showField(method.name, '* skipped *');
                                         return next(nextMethods);
