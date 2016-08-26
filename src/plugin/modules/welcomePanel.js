@@ -442,7 +442,7 @@ define([
         function renderAssembly(type, ref) {
             var getRef = function (context) {
                 return context.ref;
-            }
+            };
             var methods = [
                 {
                     name: 'get_assembly_id',
@@ -910,7 +910,6 @@ define([
                                         run = true;
                                     }
                                     if (run) {
-                                        console.log('RUNNING', method.name, args);
                                         api[method.name].apply(api, args)
                                             .then(function (value) {
                                                 results[method.name] = value;
